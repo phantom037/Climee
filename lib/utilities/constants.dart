@@ -2,21 +2,52 @@ import 'package:flutter/material.dart';
 
 const kTempTextStyle = TextStyle(
   fontFamily: 'Spartan MB',
-  fontSize: 100.0,
+  fontSize: 70.0,
 );
 
 const kMessageTextStyle = TextStyle(
   fontFamily: 'Spartan MB',
-  fontSize: 60.0,
+  fontSize: 40.0,
 );
 
 const kButtonTextStyle = TextStyle(
   fontSize: 30.0,
+  color: Colors.yellow,
   fontFamily: 'Spartan MB',
 );
 
 const kConditionTextStyle = TextStyle(
+  fontSize: 70.0,
+);
+
+const kDetailTextStyle = TextStyle(
+  fontFamily: 'Spartan MB',
+  fontSize: 25,
+);
+
+const kSubDetailTextStyle = TextStyle(
+  fontFamily: 'Spartan MB',
+  fontSize: 15,
+);
+
+//Large Screen
+const kTempTextStyleLarge = TextStyle(
+  fontFamily: 'Spartan MB',
   fontSize: 100.0,
+);
+
+const kConditionTextStyleLarge = TextStyle(
+  fontSize: 100.0,
+);
+
+const kDetailTextStyleLarge = TextStyle(
+  fontFamily: 'Spartan MB',
+  fontSize: 30,
+);
+
+const kSubDetailTextStyleLarge = TextStyle(
+  fontFamily: 'Spartan MB',
+  fontSize: 20,
 );
 
 const kTextFieldInputDecoration = InputDecoration(

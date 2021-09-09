@@ -16,6 +16,7 @@ class NetWorkHelper {
       return decodedData;
     } else {
       print(response.statusCode);
+      return null;
     }
   }
 }

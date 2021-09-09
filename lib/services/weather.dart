@@ -15,6 +15,14 @@ class WeatherModel {
     return weatherData;
   }
 
+  Future<dynamic> getCityDetect() async {
+    var url =
+        'https://api.openweathermap.org/data/2.5/weather?q=los%20angeles&appid=39b60e9a2d5c6c2ed36545f8e337031a&units=metric';
+    NetWorkHelper netWorkHelper = NetWorkHelper(url);
+    var weatherData = await netWorkHelper.getData();
+    return weatherData;
+  }
+
   Future<dynamic> getLocationWeather() async {
     Location location = Location();
     await location.getCurrentLocation();
@@ -24,6 +32,9 @@ class WeatherModel {
     NetWorkHelper networkHelper = NetWorkHelper(
         '$openWeatherMapURL?lat=$latitude&lon=$longitude&appid=$apiKey&units=metric');
     var weatherData = await networkHelper.getData();
+    if (weatherData == null) {
+      weatherData = await getCityDetect();
+    }
     return weatherData;
   }
 
