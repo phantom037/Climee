@@ -24,7 +24,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot](https://media.istockphoto.com/photos/birch-in-frost-picture-id1301976222?b=1&k=20&m=1301976222&s=170667a&w=0&h=B5WsNAcRCIERJbUv1AqE2aL03fRHqfVaGViFxltCQpE=)]
+[![Product Name Screen Shot][https://media.istockphoto.com/photos/birch-in-frost-picture-id1301976222?b=1&k=20&m=1301976222&s=170667a&w=0&h=B5WsNAcRCIERJbUv1AqE2aL03fRHqfVaGViFxltCQpE=]]
 
 Weather has a tremendous affect on peoples daily lives. For instance, it is raining today and looking outside I see far fewer joggers and bikers out today than on typical sunny days in Santa Barbara. People who are outside are wearing warmer (and more) clothing than they normally do, and are making no attempt to linger outside or sunbathe, but instead hurry around to try to rush back inside as fast as possible. Climee is a solution to solve those problems.
 
