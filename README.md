@@ -41,7 +41,7 @@ Here's why:
 ### Built With
 
 * [Flutter](https://flutter.dev/)
-* [Github](https://github.com/)
+* [RestAPI](https://github.com/)
 * [OpenWeather](https://openweathermap.org/)
 * [WAQI](https://waqi.info/)
 
