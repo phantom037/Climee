@@ -34,8 +34,6 @@ Here's why:
 * As always, this app is free to download and use for any purpose!
 * Access current weather data for any location on Earth including over 200,000 cities!
 
-<p align="right">(<a href="#top">back to top</a>)</p>
-
 
 
 ### Built With
