@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:glassmorphism/glassmorphism.dart';
 import 'package:http/http.dart' as http;
 import 'package:clima/screens/city_screen.dart';
 import 'package:flutter/material.dart';
@@ -6,11 +8,15 @@ import 'package:clima/utilities/constants.dart';
 import 'package:clima/services/weather.dart';
 import 'package:intl/intl.dart';
 import 'package:clima/services/aqi.dart';
+import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tzmap;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
 class LocationScreen extends StatefulWidget {
-  LocationScreen({this.locationWeather, this.aqIndex});
+  LocationScreen({this.locationWeather, this.aqIndex, this.forecast});
   final locationWeather;
   final aqIndex;
+  var forecast;
   @override
   _LocationScreenState createState() => _LocationScreenState();
 }
@@ -61,6 +67,41 @@ class _LocationScreenState extends State<LocationScreen> {
       humidity = weatherData['main']['humidity'];
       cloud = weatherData['clouds']['all'];
       description = weatherData['weather'][0]['description'];
+      print('City: $cityName');
+    });
+  }
+
+  Future<int> findStartTimeIndex(
+      dynamic forecastTimeList, dynamic i, DateTime current) async {
+    var dataTime = DateTime.parse(forecastTimeList[i]['dt_txt']);
+    print('from findStartTimeIndex now: $current\tdata: $dataTime');
+    if (current.compareTo(dataTime) > 0) {
+      return findStartTimeIndex(forecastTimeList, i + 1, current);
+    }
+    return i;
+  }
+
+  Future<int> getStartTimeIndex(dynamic forecastData, dynamic area) async {
+    tz.initializeTimeZones();
+    var detroit = tz.getLocation(area);
+    var extract = tz.TZDateTime.now(detroit);
+    var now = DateTime.parse(DateFormat('yyyy-MM-dd hh:00:00').format(extract));
+    print('from getStartTimeIndex: $now');
+    //int len = forecastData['list'].length;
+    int startIndex = await findStartTimeIndex(forecastData['list'], 0, now);
+    return startIndex;
+  }
+
+  void updateForecast(dynamic forecastData, dynamic start) {
+    setState(() {
+      widget.forecast = [];
+      for (int i = start; i < start + 8; i++) {
+        var temp = [];
+        temp.add(forecastData['list'][i]['main']['temp']);
+        temp.add(forecastData['list'][0]['weather'][0]['icon']);
+        temp.add(DateTime.parse(forecastData['list'][i]['dt_txt']));
+        widget.forecast.add(temp);
+      }
     });
   }
 
@@ -82,7 +123,7 @@ class _LocationScreenState extends State<LocationScreen> {
           condition = "Moderate";
         } else if (aqi <= 150) {
           aqiColor = Colors.orange;
-          condition = "Unhealthy for Sensitive Groups";
+          condition = "Sensitive";
         } else if (aqi <= 200) {
           aqiColor = Colors.red;
           condition = "Unhealthy";
@@ -108,13 +149,6 @@ class _LocationScreenState extends State<LocationScreen> {
     var width = media.size.width;
     var height = media.size.height;
     double area = width * height;
-    print("Area: $area");
-    print("GMT: $GMT");
-    DateTime now = DateTime.now();
-    /*String time = dateTime == "N.A"
-        ? "Can not Access Data"
-        : DateFormat('kk:mm:ss EEE d MMM').format(dateTime);
-     */
     AssetImage background;
     if (dateTime is DateTime) {
       if (dateTime.hour > 1 && dateTime.hour < 11) {
@@ -146,19 +180,30 @@ class _LocationScreenState extends State<LocationScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  FlatButton(
+                  TextButton(
                     onPressed: () async {
                       var weatherData = await weatherModel.getLocationWeather();
-                      updateUI(weatherData);
                       var aqiData = await aqiModel.getLocationAQI(cityName);
+                      dynamic longitude = weatherData['coord']['lon'];
+                      dynamic latitude = weatherData['coord']['lat'];
+                      var forecastData = await weatherModel.getCityForecast(
+                          latitude, longitude);
+                      dynamic area =
+                          tzmap.latLngToTimezoneString(latitude, longitude);
+                      print('area: $area');
+                      int start = await getStartTimeIndex(forecastData, area);
+                      print('startIndex: $start');
+                      updateUI(weatherData);
                       updateAQI(aqiData);
+                      updateForecast(forecastData, start);
                     },
                     child: Icon(
                       Icons.near_me,
-                      size: area > 304000 ? 50.0 : 40,
+                      color: Colors.white70,
+                      size: 30,
                     ),
                   ),
-                  FlatButton(
+                  TextButton(
                     onPressed: () async {
                       var typedName = await Navigator.push(
                         context,
@@ -171,14 +216,27 @@ class _LocationScreenState extends State<LocationScreen> {
                       if (typedName != null) {
                         var weatherData =
                             await weatherModel.getCityWeather(typedName);
+                        var aqiData = await aqiModel.getLocationAQI(typedName);
+                        dynamic longitude = weatherData['coord']['lon'];
+                        dynamic latitude = weatherData['coord']['lat'];
+                        var forecastData = await weatherModel.getCityForecast(
+                            latitude, longitude);
+                        print(
+                            'From forecast: lat: $latitude \tlon: $longitude');
+                        dynamic area =
+                            tzmap.latLngToTimezoneString(latitude, longitude);
+                        print('area: $area');
+                        int start = await getStartTimeIndex(forecastData, area);
+                        print('startIndex: $start');
                         updateUI(weatherData);
-                        var aqiData = await aqiModel.getCityAQI(typedName);
                         updateAQI(aqiData);
+                        updateForecast(forecastData, start);
                       }
                     },
                     child: Icon(
                       Icons.search,
-                      size: area > 304000 ? 50.0 : 40,
+                      color: Colors.white70,
+                      size: 30,
                     ),
                   ),
                 ],
@@ -189,60 +247,183 @@ class _LocationScreenState extends State<LocationScreen> {
                   children: <Widget>[
                     Text(
                       '$temperature°C',
-                      style:
-                          area > 304000 ? kTempTextStyleLarge : kTempTextStyle,
+                      style: kTempTextStyle,
                     ),
                     Text(
                       weatherIcon,
-                      style: area > 304000
-                          ? kConditionTextStyleLarge
-                          : kConditionTextStyle,
+                      style: kConditionTextStyle,
                     ),
                   ],
                 ),
               ),
-              Padding(
-                  padding: EdgeInsets.only(left: 20, right: 10),
-                  child: Text(
-                    'Feels like $feel°C with $description.',
-                    style: area > 304000
-                        ? kDetailTextStyleLarge
-                        : kDetailTextStyle,
-                  )),
-              Padding(
-                  padding: EdgeInsets.only(left: 20, right: 20),
-                  child: Text(
-                    'Highest: $max°C\t\t Lowest: $min°C\n\nHumidity: $humidity%\t\t Cloud: $cloud%',
-                    style: area > 304000
-                        ? kSubDetailTextStyleLarge
-                        : kSubDetailTextStyle,
-                  )),
-              Padding(
-                  padding: EdgeInsets.only(left: 20),
-                  child: Row(children: <Widget>[
-                    Text(
-                      'AQI: $aqi',
-                      style: TextStyle(
-                        fontSize: area > 304000 ? 20 : 18,
-                        color: aqiColor,
-                        fontFamily: 'Spartan MB',
-                      ),
-                    ),
-                    Text(
-                      '\t\t$condition',
-                      style: TextStyle(
-                        fontSize: area > 304000 ? 15 : 12,
-                        color: Colors.white,
-                        fontFamily: 'Spartan MB',
-                      ),
-                    ),
-                  ])),
-              Padding(
-                padding: EdgeInsets.only(right: 10.0),
-                child: Text(
-                  '$weatherMessage in $cityName',
-                  textAlign: TextAlign.right,
-                  style: kMessageTextStyle,
+              Container(
+                margin: const EdgeInsets.symmetric(
+                    vertical: 10.0, horizontal: 10.0),
+                height: 80,
+                child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    shrinkWrap: true,
+                    itemCount: widget.forecast.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Padding(
+                        padding: EdgeInsets.only(left: 20),
+                        child: Container(
+                          width: 55,
+                          height: 80,
+                          decoration: new BoxDecoration(
+                            borderRadius: BorderRadius.circular(5.0),
+                            gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFFffffff).withOpacity(0.2),
+                                  Color(0xFFFFFFFF).withOpacity(0.5),
+                                ],
+                                stops: [
+                                  0.1,
+                                  1,
+                                ]),
+                          ),
+                          child: Column(
+                            children: <Widget>[
+                              Text(
+                                  DateFormat('h a')
+                                      .format(widget.forecast[index][2]),
+                                  style: kForecastStyle),
+                              Image(
+                                width: 40,
+                                height: 40,
+                                image: NetworkImage(
+                                  'https://openweathermap.org/img/w/${widget.forecast[index][1]}.png',
+                                ),
+                              ),
+                              Text(
+                                  widget.forecast[index][0].toInt().toString() +
+                                      '°C',
+                                  style: kForecastStyle)
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+              ),
+              Align(
+                child: GlassmorphicContainer(
+                  width: 350,
+                  height: 350,
+                  borderRadius: 20,
+                  blur: 2,
+                  alignment: Alignment.bottomCenter,
+                  border: 2,
+                  linearGradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFFffffff).withOpacity(0.1),
+                        Color(0xFFFFFFFF).withOpacity(0.05),
+                      ],
+                      stops: [
+                        0.1,
+                        1,
+                      ]),
+                  borderGradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFffffff).withOpacity(0.5),
+                      Color((0xFFFFFFFF)).withOpacity(0.5),
+                    ],
+                  ),
+                  child: Container(
+                    width: 350,
+                    height: 350,
+                    child: Column(
+                        //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SizedBox(
+                            height: 20,
+                          ),
+                          Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20),
+                              child: Text(
+                                'Low: $min°C\t\t High: $max°C',
+                                style: area > 304000
+                                    ? kSubDetailTextStyleLarge
+                                    : kSubDetailTextStyle,
+                              )),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20),
+                              child: Text(
+                                'Humidity: $humidity%\t\t Cloud: $cloud%',
+                                style: area > 304000
+                                    ? kSubDetailTextStyleLarge
+                                    : kSubDetailTextStyle,
+                              )),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20),
+                              child: Text(
+                                'UV: 4\t\t Wind: 2m/s',
+                                style: area > 304000
+                                    ? kSubDetailTextStyleLarge
+                                    : kSubDetailTextStyle,
+                              )),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          Padding(
+                              padding: EdgeInsets.only(left: 20),
+                              child: Row(children: <Widget>[
+                                Text(
+                                  'AQI: $aqi',
+                                  style: TextStyle(
+                                    fontSize: area > 304000 ? 20 : 18,
+                                    color: aqiColor,
+                                    fontFamily: 'Spartan MB',
+                                  ),
+                                ),
+                                Text(
+                                  '\t\t$condition',
+                                  style: TextStyle(
+                                    fontSize: area > 304000 ? 20 : 18,
+                                    color: Colors.white,
+                                    fontFamily: 'Spartan MB',
+                                  ),
+                                ),
+                              ])),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20),
+                              child: AnimatedTextKit(
+                                animatedTexts: [
+                                  TyperAnimatedText(
+                                      'Feels like $feel°C with $description.',
+                                      textStyle: area > 304000
+                                          ? kDetailTextStyleLarge
+                                          : kDetailTextStyle,
+                                      speed: const Duration(milliseconds: 200)),
+                                  TyperAnimatedText(
+                                      '$weatherMessage in $cityName.',
+                                      textStyle: area > 304000
+                                          ? kDetailTextStyleLarge
+                                          : kDetailTextStyle,
+                                      speed: const Duration(milliseconds: 200))
+                                ],
+                                totalRepeatCount: 10,
+                                pause: const Duration(seconds: 4),
+                                displayFullTextOnTap: true,
+                                stopPauseOnTap: true,
+                              )),
+                        ]),
+                  ),
                 ),
               ),
             ],

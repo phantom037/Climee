@@ -9,12 +9,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  geolocator: ^6.2.1
+  geolocator: ^9.0.2
   cupertino_icons: ^0.1.2
-  http: ^0.12.0+2
-  flutter_spinkit: "^4.1.2"
+  http: ^0.13.5
+  flutter_spinkit: ^5.1.0
   intl: ^0.17.0
   url_launcher: ^6.0.1
+  animated_text_kit: ^4.2.2
+  glassmorphism: ^3.0.0
+  new_version: ^0.3.1
+  internet_connection_checker: ^1.0.0+1
+  lat_lng_to_timezone: ^0.2.0
+  timezone: ^0.8.0
 
 
 

@@ -9,7 +9,7 @@ class CityScreen extends StatefulWidget {
 
 void openurl() {
   String url = "https://dlmocha.com/app/clime";
-  launch(url);
+  launchUrl(Uri.parse(url));
 }
 
 class _CityScreenState extends State<CityScreen> {
@@ -33,42 +33,47 @@ class _CityScreenState extends State<CityScreen> {
                   children: <Widget>[
                     Align(
                       alignment: Alignment.topLeft,
-                      child: FlatButton(
+                      child: TextButton(
                         onPressed: () {
                           Navigator.pop(context);
                         },
                         child: Icon(
                           Icons.arrow_back_ios,
                           size: 50.0,
+                          color: Colors.white70,
                         ),
                       ),
                     ),
                     Align(
                       alignment: Alignment.topLeft,
-                      child: FlatButton(
+                      child: TextButton(
                         onPressed: () {
                           openurl();
                         },
                         child: Icon(
                           Icons.info,
                           size: 50.0,
+                          color: Colors.white70,
                         ),
                       ),
                     ),
                   ]),
               Container(
                 padding: EdgeInsets.all(20.0),
-                child: TextField(
-                  style: TextStyle(
-                    color: Colors.black,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
+                  child: TextField(
+                    style: TextStyle(
+                      color: Colors.black,
+                    ),
+                    decoration: kTextFieldInputDecoration,
+                    onChanged: (value) {
+                      cityName = value;
+                    },
                   ),
-                  decoration: kTextFieldInputDecoration,
-                  onChanged: (value) {
-                    cityName = value;
-                  },
                 ),
               ),
-              FlatButton(
+              TextButton(
                 onPressed: () {
                   Navigator.pop(context, cityName);
                 },
